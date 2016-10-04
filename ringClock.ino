@@ -1,3 +1,6 @@
+//http://www.mauroalfieri.it/elettronica/rtc-ds1307.html
+//http://www.bristolwatch.com/arduino/arduino_ds1307.htm
+
 // Date and time functions using a DS1307 RTC connected via I2C and Wire lib
  
 #include <Wire.h>
@@ -8,7 +11,7 @@
 #endif
 
 #define PIN            6
-#define DEBUG          0
+#define DEBUG          1
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS      12
@@ -33,6 +36,7 @@ void setup () {
     Serial.begin(57600);
     Wire.begin();
     RTC.begin();
+    RTC.writeSqwPinMode(SquareWave1HZ);
  
   if (! RTC.isrunning()) {
     Serial.println("RTC is NOT running!");
@@ -56,6 +60,7 @@ void setIntensitaLuce() {
       Serial.println(miaIntensita);
     }
     if (miaIntensita < 5) {miaIntensita=5;}
+    if (miaIntensita > 150) {miaIntensita=150;}
     hourRedColor = strip.Color(miaIntensita, 0, 0);
     minuteGreenColor = strip.Color(0, miaIntensita, 0);
     secondBlueColor = strip.Color(0, 0, miaIntensita);
@@ -74,10 +79,13 @@ void setSecondi() {
 void setMinuti(){
     minuto = ((int)now.minute())/5;
     strip.setPixelColor(minuto, minuteGreenColor);
-    if (minuto>=1) {
+    //spengo il pixel precedente a meno che nn ci siano i secondi attivi
+    if (minuto>=1 && (minuto-1)!=secondo) {
        strip.setPixelColor(minuto-1, blackColor);
     } else {
-       strip.setPixelColor(11, blackColor);
+      if (secondo!=11) {
+        strip.setPixelColor(11, blackColor);
+      }      
     }
 }
 
@@ -118,5 +126,4 @@ void loop () {
     
     delay(1000);
 }
-
 
