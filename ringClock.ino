@@ -16,18 +16,30 @@
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS      12
 int lightPin = 0;
+int ledPin = 13; // test per la programmazione
 RTC_DS1307 RTC;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 int ora,minuto,secondo,intensita=150,miaIntensita;
+int buzzer = 32;     //buzzer connesso al pin 3
+
 uint32_t hourRedColor;
 uint32_t minuteGreenColor;
 uint32_t secondBlueColor;
 uint32_t blackColor = strip.Color(0, 0, 0);
 
+
 DateTime now;
- 
+
+int btnProgramma = 40;  // change to whatever you want
+int btnAvanza = 42;  // change to whatever you want
+
 void setup () {
+    pinMode(btnProgramma, INPUT);    // button as input
+    digitalWrite(btnProgramma, HIGH); // turns on pull-up resistor after input
+    pinMode(btnAvanza, INPUT);    // button as input
+    digitalWrite(btnAvanza, HIGH); // turns on pull-up resistor after input
+
   // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
 #if defined (__AVR_ATtiny85__)
   if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
@@ -95,10 +107,50 @@ void setOre(){
     strip.show();
 }
 
+void verificaProgrammazione(){
+  Serial.println("sto in verifica");
+  int i = 0;
+  uint32_t rndColor;
+  if (digitalRead(btnProgramma) == LOW) {
+    delay(50);
+      if (digitalRead(btnProgramma) == LOW) {
+        Serial.println("stai programmando");
+        while(1) {
+          rndColor = strip.Color(random(0, 255), random(0, 255), random(0, 255));
+        if (i==13) {
+            return;
+          }
+          strip.setPixelColor(i, rndColor);
+          if (i>0) {
+            strip.setPixelColor(i-1, strip.Color(0,0,0));
+          } else {
+            strip.setPixelColor(11, strip.Color(0,0,0));
+          }
+        
+          strip.show();
+          i += 1;          
+          delay(1000);
+          }
+        //digitalWrite(ledPin, HIGH);           // turn on LED
+      }
+  }
+}
+
+void hourlyBeep(){
+//beep every hour using buzzer
+    if (now.minute() == 0 && 
+        now.second() == 0 ) {
+      tone(buzzer,2000,50);
+    }
+}
+
 void loop () {
-    setIntensitaLuce();
+    verificaProgrammazione();
     
+    setIntensitaLuce();
+
     now = RTC.now();
+    hourlyBeep();
 
     setSecondi();
     setMinuti();
