@@ -11,7 +11,7 @@
 #endif
 
 #define PIN            6
-#define DEBUG          1
+#define DEBUG          0
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS      12
@@ -22,6 +22,7 @@ RTC_DS1307 RTC;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 int ora,minuto,secondo,intensita=150,miaIntensita;
 int buzzer = 32;     //buzzer connesso al pin 3
+
 
 uint32_t hourRedColor;
 uint32_t minuteGreenColor;
@@ -108,40 +109,104 @@ void setOre(){
 }
 
 void verificaProgrammazione(){
-  Serial.println("sto in verifica");
-  int i = 0;
-  uint32_t rndColor;
+  //Serial.println("sto in verifica");
+  int ore = 1;
+  int min=0;
   if (digitalRead(btnProgramma) == LOW) {
-    delay(50);
+    delay(100);
       if (digitalRead(btnProgramma) == LOW) {
         Serial.println("stai programmando");
+        beep();
+        spegniTutto();
+        delay(1000);
         while(1) {
-          rndColor = strip.Color(random(0, 255), random(0, 255), random(0, 255));
-        if (i==13) {
-            return;
+          if (digitalRead(btnAvanza) == LOW) {
+            delay(100);
+            if (digitalRead(btnAvanza) == LOW) {
+              delay(500);
+              strip.setPixelColor(ore, hourRedColor);
+              if (ore==0) {
+                strip.setPixelColor(11, blackColor);
+              } else {
+                strip.setPixelColor(ore-1, blackColor);
+              }
+              strip.show();
+              ore++;
+              ore=ore%12;
+            }
           }
-          strip.setPixelColor(i, rndColor);
-          if (i>0) {
-            strip.setPixelColor(i-1, strip.Color(0,0,0));
-          } else {
-            strip.setPixelColor(11, strip.Color(0,0,0));
+         if (digitalRead(btnProgramma) == LOW) {
+            if (ore==0) {ore=12;}
+            delay(100);
+              if (digitalRead(btnProgramma) == LOW) {
+                min=settaMinuti();
+                //RTC.adjust(DateTime(_year, _month, _day, _hour, _min, _sec));
+                RTC.adjust(DateTime(2016, 1, 1, ore-1, min, 0));
+                Serial.println("imposto ora");
+                Serial.println(ore-1);
+                spegniTutto();           
+                return;
+              }
           }
-        
-          strip.show();
-          i += 1;          
-          delay(1000);
-          }
+        }
         //digitalWrite(ledPin, HIGH);           // turn on LED
       }
   }
 }
 
+int settaMinuti() {
+  beep();
+  spegniTutto();
+  delay(1000);
+  Serial.println("sto in settaminuti");
+  int min = 1;
+        while(1) {
+          if (digitalRead(btnProgramma) == LOW) {
+            delay(100);
+              if (digitalRead(btnProgramma) == LOW) {
+                Serial.println("imposto minuti");
+                if (min<=0) {min=59;}
+                Serial.println(min-1);
+                return min-1;
+              }
+          }
+          if (digitalRead(btnAvanza) == LOW) {
+            delay(100);
+            if (digitalRead(btnAvanza) == LOW) {
+              delay(500);
+              strip.setPixelColor(min%12, minuteGreenColor);
+              if (min%12==0) {
+                strip.setPixelColor(11, blackColor);
+              } else {
+                strip.setPixelColor((min-1)%12, blackColor);
+              }
+              strip.show();
+              min++;
+              Serial.println("sono arrivato a contare minuti:");
+              Serial.println(min);
+              min=min%60;
+            }
+          }
+        }
+}
+
 void hourlyBeep(){
 //beep every hour using buzzer
-    if (now.minute() == 0 && 
-        now.second() == 0 ) {
-      tone(buzzer,2000,50);
-    }
+  if (//now.minute() == 0 && 
+      now.second() == 0 ) {
+    beep();        
+  }
+}
+
+void beep() {
+  tone(buzzer,2000,50);
+}
+
+void spegniTutto() {
+  for (int st=0; st<12; st++) {
+    strip.setPixelColor(st, strip.Color(0,0,0));
+  }
+  strip.show();
 }
 
 void loop () {
@@ -158,7 +223,7 @@ void loop () {
   
     strip.show();
 
-    if (DEBUG) {      
+    if (DEBUG || 1>0) {      
       Serial.println();
       Serial.print(now.year(), DEC);
       Serial.print('/');
