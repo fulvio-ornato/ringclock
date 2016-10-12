@@ -192,7 +192,7 @@ int settaMinuti() {
 
 void hourlyBeep(){
 //beep every hour using buzzer
-  if (//now.minute() == 0 && 
+  if (now.minute() == 0 && 
       now.second() == 0 ) {
     beep();        
   }
