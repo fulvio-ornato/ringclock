@@ -20,12 +20,12 @@ int ledPin = 13; // test per la programmazione
 RTC_DS1307 RTC;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
-int ora,minuto,secondo,intensita=150,miaIntensita;
+int ora,minuto,minuto2,secondo,intensita=150,miaIntensita;
 int buzzer = 32;     //buzzer connesso al pin 3
 
 
 uint32_t hourRedColor;
-uint32_t minuteGreenColor;
+uint32_t minuteGreenColor,minuteGreenColor2;
 uint32_t secondBlueColor;
 uint32_t blackColor = strip.Color(0, 0, 0);
 
@@ -91,7 +91,16 @@ void setSecondi() {
 
 void setMinuti(){
     minuto = ((int)now.minute())/5;
+    minuteGreenColor  = strip.Color(0, miaIntensita/(now.minute()-minuto*5+1), 0);
+    Serial.print("intensita green led 1=");Serial.println(miaIntensita/(now.minute()-minuto*5+1));
     strip.setPixelColor(minuto, minuteGreenColor);
+    //accendo il secondo green solo se non sono sul 5,10,15 ....
+    if (now.minute()%5 != 0) {
+      minuto2 = (minuto+1)%12;
+      minuteGreenColor2 = strip.Color(0, miaIntensita/(minuto2*5-now.minute()), 0);
+      Serial.print("intensita green led 2=");Serial.println(miaIntensita/(minuto2*5-now.minute()));
+      strip.setPixelColor(minuto2, minuteGreenColor2);
+    } 
     //spengo il pixel precedente a meno che nn ci siano i secondi attivi
     if (minuto>=1 && (minuto-1)!=secondo) {
        strip.setPixelColor(minuto-1, blackColor);
@@ -193,6 +202,11 @@ int settaMinuti() {
 void hourlyBeep(){
 //beep every hour using buzzer
   if (now.minute() == 0 && 
+      now.second() == 0 ) {
+    beep();        
+  }
+  if (now.minute()%12 == 0 &&
+      now.minute() == 0 && 
       now.second() == 0 ) {
     beep();        
   }
