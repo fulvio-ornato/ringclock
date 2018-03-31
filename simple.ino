@@ -25,6 +25,8 @@ int ledTurnOffSecs = 0;
 int ledTurnOffMins = 0;
 int ledTurnOffHour = 0;
 int brightness = 50;
+long counter = 86000;
+int h,m,s;
 DateTime now;
 
 
@@ -40,10 +42,26 @@ void setup() {
 }
 
 void loop() {
-  Serial.println(int(millis()/1000));
-  for(int h=0;h<NUMPIXELS;h++){
+  h = int(counter / 60 / 60)%12;
+  m = int(counter / 60)%60;
+  s = counter%60;
+
+  Serial.println("counter="+String(counter));
+  Serial.println("hours="+String(h));
+  Serial.println("mins=" +String(m));
+  Serial.println("secs=" +String(s));
+
+  m = int(m/5);
+  s = int(s/5);
+
+  Serial.println("hours2="+String(h));
+  Serial.println("mins2=" +String(m));
+  Serial.println("secs2=" +String(s));
+
+  /*for(int h=0;h<NUMPIXELS;h++){
     for(int m=0;m<NUMPIXELS;m++){
-      for(int s=0;s<NUMPIXELS;s++){
+      for(int s=0;s<NUMPIXELS;s++){*/
+      
         if (s==0) ledTurnOffSecs=11; else ledTurnOffSecs=s-1;
         if (m==0) ledTurnOffMins=11; else ledTurnOffMins=m-1;
         if (h==0) ledTurnOffHour=11; else ledTurnOffHour=h-1;
@@ -58,8 +76,13 @@ void loop() {
     
         pixels.show();
     
-        delay(delayval); 
-      }
+        //delay(delayval); 
+        
+  /*    }
     }
-  }
+  }*/
+  
+  counter += 1;
+  if (counter==86400) counter = 0;
+  delay(50);
 }
