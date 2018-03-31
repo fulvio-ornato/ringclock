@@ -11,6 +11,7 @@
 // Which pin on the Arduino is connected to the NeoPixels?
 // On a Trinket or Gemma we suggest changing this to 1
 #define PIN            6
+#define DEBUG 0
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS      12
@@ -25,8 +26,8 @@ int ledTurnOffSecs = 0;
 int ledTurnOffMins = 0;
 int ledTurnOffHour = 0;
 int brightness = 50;
-long counter = 86000;
-int h,m,s;
+long counter = 0;
+int h,m,m1,s;
 DateTime now;
 
 
@@ -46,32 +47,50 @@ void loop() {
   m = int(counter / 60)%60;
   s = counter%60;
 
-  Serial.println("counter="+String(counter));
-  Serial.println("hours="+String(h));
-  Serial.println("mins=" +String(m));
-  Serial.println("secs=" +String(s));
+  if (DEBUG) {
+    Serial.println("counter="+String(counter));
+    Serial.println("hours="+String(h));
+    Serial.println("mins=" +String(m));
+    Serial.println("secs=" +String(s));
+  }
 
+  m1 = m%5;
   m = int(m/5);
   s = int(s/5);
 
-  Serial.println("hours2="+String(h));
-  Serial.println("mins2=" +String(m));
-  Serial.println("secs2=" +String(s));
+  if (DEBUG) {
+    Serial.println("hours2="+String(h));
+    Serial.println("mins2=" +String(m));
+    Serial.println("m1=" +String(m1));
+    Serial.println("secs2=" +String(s));
+  }
 
   /*for(int h=0;h<NUMPIXELS;h++){
     for(int m=0;m<NUMPIXELS;m++){
       for(int s=0;s<NUMPIXELS;s++){*/
-      
+
+        //set seconds
         if (s==0) ledTurnOffSecs=11; else ledTurnOffSecs=s-1;
-        if (m==0) ledTurnOffMins=11; else ledTurnOffMins=m-1;
-        if (h==0) ledTurnOffHour=11; else ledTurnOffHour=h-1;
-    
         pixels.setPixelColor(ledTurnOffSecs, pixels.Color(0,0,0));
+
+        //sets minutes
+        if (m==0) 
+          ledTurnOffMins=11;
+        else 
+          ledTurnOffMins=m-1;
         pixels.setPixelColor(ledTurnOffMins, pixels.Color(0,0,0));
+          
+
+        //sets hours
+        if (h==0) ledTurnOffHour=11; else ledTurnOffHour=h-1;
         pixels.setPixelColor(ledTurnOffHour, pixels.Color(0,0,0));
           
         pixels.setPixelColor(s, pixels.Color(0,0,brightness));
-        pixels.setPixelColor(m, pixels.Color(0,brightness,0));
+        pixels.setPixelColor(m, pixels.Color(0,brightness-brightness*m1/5,0));
+        if (m1>0 and m!=11)
+          pixels.setPixelColor(m+1, pixels.Color(0,brightness*m1/5,0));
+        if (m1>0 and m==11)
+          pixels.setPixelColor(0, pixels.Color(0,brightness*m1/5,0));
         pixels.setPixelColor(h, pixels.Color(brightness,0,0));
     
         pixels.show();
@@ -84,5 +103,5 @@ void loop() {
   
   counter += 1;
   if (counter==86400) counter = 0;
-  delay(50);
+  delay(1000);
 }
