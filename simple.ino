@@ -3,6 +3,7 @@
 
 #include <Adafruit_NeoPixel.h>
 #include "RTClib.h"
+#include "Wire.h"
 
 #ifdef __AVR__
   #include <avr/power.h>
@@ -12,8 +13,10 @@
 // On a Trinket or Gemma we suggest changing this to 1
 #define PIN            8
 #define HEARTBATE      7
-#define DEBUG          1
+#define DEBUG          0
 #define analogPin      2
+#define SLAVE_ADDRESS 0x04
+
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS      12
@@ -32,9 +35,11 @@ int brightness = 150;
 int intensita = 120;
 long counter = 0;
 int h,m,m1,s;
+int ha,ma,sa;
 int val = 0;
 DateTime now;
-
+int number = 0;
+int state = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -45,6 +50,12 @@ void setup() {
   // End of trinket special code
   pixels.setBrightness(brightness);
   pixels.begin();
+
+  Wire.begin(SLAVE_ADDRESS);
+  
+  // define callbacks for i2c communication
+  Wire.onReceive(receiveData);
+  Wire.onRequest(sendData);
 
   pinMode(HEARTBATE, OUTPUT);
   noInterrupts();           // disable all interrupts
@@ -139,4 +150,37 @@ void loop() {
   counter += 1;
   if (counter==86400) counter = 0;
   delay(1000);
+}
+
+void receiveData(int byteCount){
+
+  pixels.begin();
+  pixels.show();
+  while(Wire.available()) {
+    number = Wire.read();
+    Serial.print("data received: ");
+    Serial.println(number);
+
+    if (number >= 200) { 
+      ha=number-200; 
+    } 
+    if (number >= 100 and number <200) { 
+      ma=number-100; 
+    } 
+    if (number <= 100) { 
+      sa=number; 
+    } 
+
+    counter = long(ha)*3600+long(ma)*60+long(sa);
+
+    Serial.println("h="+String(ha));
+    Serial.println("m="+String(ma));
+    Serial.println("s="+String(sa));
+    Serial.println("counter="+String(counter));
+  }
+}
+
+// callback for sending data
+void sendData(){
+  Wire.write(number*2);
 }
