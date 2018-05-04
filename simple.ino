@@ -10,8 +10,10 @@
 
 // Which pin on the Arduino is connected to the NeoPixels?
 // On a Trinket or Gemma we suggest changing this to 1
-#define PIN            6
-#define DEBUG 0
+#define PIN            8
+#define HEARTBATE      7
+#define DEBUG          1
+#define analogPin      2
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS      12
@@ -22,27 +24,60 @@
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 int delayval = 500; // delay for half a second
+int timer1_counter;
 int ledTurnOffSecs = 0;
 int ledTurnOffMins = 0;
 int ledTurnOffHour = 0;
-int brightness = 50;
+int brightness = 150;
+int intensita = 120;
 long counter = 0;
 int h,m,m1,s;
+int val = 0;
 DateTime now;
 
 
 void setup() {
   Serial.begin(9600);
-  // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
+  // This is for Trinket 5V 16MHz, you can remove theseintensita three lines if you are not using a Trinket
 #if defined (__AVR_ATtiny85__)
   if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
 #endif
   // End of trinket special code
   pixels.setBrightness(brightness);
   pixels.begin();
+
+  pinMode(HEARTBATE, OUTPUT);
+  noInterrupts();           // disable all interrupts
+  TCCR1A = 0;
+  TCCR1B = 0;
+  timer1_counter =    3036;   // preload timer 65536-16MHz/256/1Hz
+  
+  TCNT1 = timer1_counter;   // preload timer
+  TCCR1B |= (1 << CS12);    // 256 prescaler 
+  TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
+  interrupts();             // enable all interrupts
+}
+
+ISR(TIMER1_OVF_vect)        // interrupt service routine 
+{
+  TCNT1 = timer1_counter;   // preload timer
+  //analogWrite(3,50);
+  if (val<500) {
+    digitalWrite(HEARTBATE, digitalRead(HEARTBATE) ^ 1);
+  } else {
+    digitalWrite(HEARTBATE, 0);
+  }
 }
 
 void loop() {
+  val = analogRead(analogPin);
+  brightness = val/3 - intensita;
+  if (brightness < 10) {brightness=10;} 
+  if (DEBUG) {
+    Serial.println("photo="+String(val));
+    Serial.println("brightness="+String(brightness));
+  }
+  
   h = int(counter / 60 / 60)%12;
   m = int(counter / 60)%60;
   s = counter%60;
