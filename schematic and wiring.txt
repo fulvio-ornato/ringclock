@@ -1,0 +1,8 @@
+R1 100Kohm resistance -> LDR
+LDR -> 5V
+arduino A3 between R1 and LDR
+arduino A4 -> orange PI pin 3  
+arduino A5 -> orange PI pin 5
+GND -> GND Orange PI
+R2 220 ohm -> LED 
+LED anodo -> arduino PIN 7
